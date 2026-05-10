@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>French Sentences</title>
+<style>
+  body {
+    font-family: sans-serif;
+    max-width: 620px;
+    margin: 0 auto;
+    padding: 24px 16px 60px;
+    background: #f0f0f0;
+    color: #000;
+  }
+
+  h1 { font-size: 22px; margin-bottom: 4px; }
+  .subtitle { font-size: 13px; color: #555; margin-bottom: 6px; }
+  .hint { font-size: 12px; color: #888; margin-bottom: 20px; background: #fff; border: 1px solid #ddd; border-radius: 6px; padding: 8px 12px; }
+
+  .stats-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 8px;
+  }
+
+  .stat-box {
+    flex: 1;
+    background: #fff;
+    border: 1.5px solid #bbb;
+    border-radius: 6px;
+    padding: 8px 12px;
+    text-align: center;
+  }
+
+  .stat-box .stat-num { font-size: 20px; font-weight: bold; display: block; }
+  .stat-box .stat-label { font-size: 11px; color: #666; }
+  .stat-box.green-box { border-color: #5a9e5a; background: #edfaed; }
+  .stat-box.green-box .stat-num { color: #2d7a2d; }
+
+  .progress-bar { height: 5px; background: #bbb; border-radius: 3px; margin-bottom: 20px; overflow: hidden; }
+  .progress-fill { height: 100%; background: #000; border-radius: 3px; transition: width 0.3s; width: 0%; }
+
+  .search input {
+    width: 100%;
+    padding: 9px 12px;
+    border: 1.5px solid #999;
+    border-radius: 4px;
+    font-size: 14px;
+    margin-bottom: 10px;
+    outline: none;
+    box-sizing: border-box;
+    background: #fff;
+    color: #000;
+  }
+
+  .search input:focus { border-color: #000; }
+
+  /* Filter tabs */
+  .filters {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+
+  .filter-btn {
+    padding: 6px 14px;
+    border: 1.5px solid #999;
+    border-radius: 20px;
+    background: #fff;
+    font-size: 12px;
+    cursor: pointer;
+    color: #333;
+  }
+
+  .filter-btn.active { background: #000; color: #fff; border-color: #000; }
+  .filter-btn.green-filter.active { background: #2d7a2d; border-color: #2d7a2d; color: #fff; }
+
+  /* Card wrapper for swipe */
+  .card-wrapper {
+    position: relative;
+    margin-bottom: 6px;
+    overflow: hidden;
+    border-radius: 6px;
+  }
+
+  /* Swipe indicator behind card */
+  .swipe-bg {
+    position: absolute;
+    inset: 0;
+    background: #4caf50;
+    display: flex;
+    align-items: center;
+    padding-left: 20px;
+    font-size: 20px;
+    color: #fff;
+    font-weight: bold;
+    border-radius: 6px;
+  }
+
+  .sentence-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 12px;
+    background: #fff;
+    border: 1.5px solid #bbb;
+    border-radius: 6px;
+    position: relative;
+    touch-action: pan-y;
+    user-select: none;
+    transition: transform 0.15s ease, background 0.3s;
+    cursor: grab;
+  }
+
+  .sentence-item.mastered {
+    background: #edfaed;
+    border-color: #5a9e5a;
+  }
+
+  .sentence-item.learned {
+    background: #e8e8e8;
+    border-color: #999;
+  }
+
+  .sentence-item.mastered.learned {
+    background: #edfaed;
+    border-color: #5a9e5a;
+  }
+
+  .num { font-size: 12px; color: #555; min-width: 24px; padding-top: 3px; font-weight: bold; }
+  .content { flex: 1; }
+  .french { font-size: 17px; font-weight: bold; color: #000; margin-bottom: 3px; }
+  .english { font-size: 13px; color: #444; }
+
+  .sentence-item.learned .french { text-decoration: line-through; color: #888; }
+  .sentence-item.learned .english { color: #888; }
+  .sentence-item.mastered .french { color: #1a5c1a; }
+  .sentence-item.mastered.learned .french { text-decoration: line-through; color: #5a9e5a; }
+
+  /* Mastered badge */
+  .mastered-badge {
+    font-size: 11px;
+    color: #2d7a2d;
+    font-weight: bold;
+    margin-top: 2px;
+    display: none;
+  }
+
+  .sentence-item.mastered .mastered-badge { display: block; }
+
+  .btns { display: flex; gap: 6px; padding-top: 2px; }
+
+  .btn-learn, .btn-del, .btn-speak {
+    border: 1.5px solid #999;
+    background: #fff;
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 13px;
+    cursor: pointer;
+    color: #333;
+  }
+
+  .btn-learn:hover { border-color: #000; color: #000; background: #eee; }
+  .btn-del:hover { border-color: #c00; color: #c00; }
+  .btn-speak:hover { border-color: #0055cc; color: #0055cc; }
+  .btn-speak.speaking { background: #0055cc; color: #fff; border-color: #0055cc; }
+  .sentence-item.learned .btn-learn { background: #000; color: #fff; border-color: #000; }
+
+  .empty { text-align: center; padding: 40px 0; color: #666; font-size: 14px; }
+</style>
+</head>
+<body>
+
+<h1>🇫🇷 French Sentences</h1>
+<div class="subtitle">Swipe right on a card to mark it as learning 💚</div>
+<div class="hint">👉 Swipe right → Learning (green) &nbsp;|&nbsp; ✓ Learned &nbsp;|&nbsp; 🔊 Listen &nbsp;|&nbsp; ✕ Delete</div>
+
+<div class="stats-row">
+  <div class="stat-box">
+    <span class="stat-num" id="stat-total">0</span>
+    <span class="stat-label">Total</span>
+  </div>
+  <div class="stat-box">
+    <span class="stat-num" id="stat-learned">0</span>
+    <span class="stat-label">Learned ✓</span>
+  </div>
+  <div class="stat-box green-box">
+    <span class="stat-num" id="stat-mastered">0</span>
+    <span class="stat-label">Learning 💚</span>
+  </div>
+</div>
+
+<div class="progress-bar"><div class="progress-fill" id="progress"></div></div>
+
+<div class="search">
+  <input type="text" id="search" placeholder="Search…" oninput="render()">
+</div>
+
+<div class="filters">
+  <button class="filter-btn active" onclick="setFilter('all', this)">All</button>
+  <button class="filter-btn" onclick="setFilter('learned', this)">Learned ✓</button>
+  <button class="filter-btn green-filter" onclick="setFilter('mastered', this)">Learning 💚</button>
+  <button class="filter-btn" onclick="setFilter('remaining', this)">Remaining</button>
+</div>
+
+<div id="list"></div>
+<div class="empty" id="empty" style="display:none">No sentences found.</div>
+
+<script>
+const KEY = 'french_v5';
+let currentFilter = 'all';
+
+const MASTER = [
+  { id: 1,  fr: 'Chéri, est-ce que tu veux quelque chose ?', en: 'Honey, do you want something?' },
+  { id: 2,  fr: 'Le policier a empêché un homme de sauter.', en: 'The police officer prevented a man from jumping.' },
+  { id: 3,  fr: 'Elle fait toujours ce qui lui plaît.', en: 'She always does what she likes.' },
+  { id: 4,  fr: 'La rivière commence à geler.', en: 'The river is starting to freeze.' },
+  { id: 5,  fr: 'La pleine lune arrive plus ou moins une fois par mois.', en: 'The full moon comes more or less once a month.' },
+  { id: 6,  fr: "Il réussit toujours tout ce qu'il veut.", en: 'He always succeeds in everything he wants.' },
+  { id: 7,  fr: 'La peau est faite de trois couches.', en: 'The skin is made of three layers.' },
+  { id: 8,  fr: 'Vous me manquez beaucoup.', en: 'I miss you very much.' },
+  { id: 9,  fr: 'Ce film est long et ennuyant.', en: 'This movie is long and boring.' },
+  { id: 10, fr: "L'argent ne fait pas le bonheur.", en: "Money doesn't buy happiness." },
+  { id: 11, fr: 'Il demande un conseil au professeur.', en: 'He asks the teacher for advice.' },
+  { id: 12, fr: 'Il a de bonnes notes en général.', en: 'He generally gets good grades.' },
+  { id: 13, fr: "C'est fou comme vous vous ressemblez.", en: "It's crazy how much you look alike." },
+  { id: 14, fr: "C'est mal de se moquer des autres.", en: "It's wrong to make fun of others." },
+  { id: 15, fr: 'Les habitants ont été sauvés par les pompiers.', en: 'The residents were saved by the firefighters.' },
+  { id: 16, fr: 'Cette voiture a été vendue aux enchères.', en: 'This car was sold at auction.' },
+  { id: 17, fr: "Tant que le projet est terminé, cela m'est égal.", en: "As long as the project is finished, it doesn't matter to me." },
+  { id: 18, fr: "C'est aussi simple que ça.", en: "It's as simple as that." },
+  { id: 19, fr: 'Rien de tel que des fruits frais.', en: "There's nothing like fresh fruit." },
+  { id: 20, fr: 'La taille S ne lui va plus.', en: "Size S doesn't fit him/her anymore." },
+  { id: 21, fr: "J'ai un doute, je ne suis pas certaine.", en: "I have a doubt, I'm not certain." },
+  { id: 22, fr: "Sois honnête et arrête de mentir.", en: 'Be honest and stop lying.' },
+  { id: 23, fr: 'Le technicien tente de résoudre le problème.', en: 'The technician is trying to solve the problem.' },
+  { id: 24, fr: "Une infection de l'oreille doit être surveillée de près.", en: 'An ear infection must be monitored closely.' },
+  { id: 25, fr: "Peux-tu emmener ta sœur à l'école ?", en: 'Can you take your sister to school?' },
+  { id: 26, fr: "Quelqu'un frappe à la porte.", en: 'Someone is knocking at the door.' },
+  { id: 27, fr: 'Donner son sang sauve des vies.', en: 'Donating blood saves lives.' },
+  { id: 28, fr: "J'ai entendu un bruit étrange dehors.", en: 'I heard a strange noise outside.' },
+  { id: 29, fr: "C'est fou ça !", en: "That's crazy!" },
+  { id: 30, fr: "Tellement d'espèces sont en voie de disparition.", en: 'So many species are endangered.' },
+  { id: 31, fr: "Personne n'a jamais su la vérité dans cette affaire.", en: 'Nobody ever knew the truth in this matter.' },
+  { id: 32, fr: 'Nous avons un peu de temps avant que le train ne parte.', en: 'We have a little time before the train leaves.' },
+  { id: 33, fr: 'Il est devenu docteur en 2005.', en: 'He became a doctor in 2005.' },
+  { id: 34, fr: 'Bruges est une des plus belles villes de Belgique.', en: 'Bruges is one of the most beautiful cities in Belgium.' },
+  { id: 35, fr: "Je n'arrive pas à retenir la dictée.", en: "I can't manage to memorize the dictation." },
+  { id: 36, fr: 'Quelle sorte de fromage préfères-tu ?', en: 'What kind of cheese do you prefer?' },
+  { id: 37, fr: "J'ai ressenti beaucoup de satisfaction à finir ce projet.", en: 'I felt a lot of satisfaction in finishing this project.' },
+  { id: 38, fr: 'Il est arrivé pendant que nous mangions.', en: 'He arrived while we were eating.' },
+  { id: 39, fr: "C'est rare de gagner à la loterie.", en: "It's rare to win the lottery." },
+  { id: 40, fr: "Rien de tel qu'un bon café.", en: "There's nothing like a good coffee." },
+  { id: 41, fr: 'La réunion sera à propos de la perte de revenus.', en: 'The meeting will be about the loss of revenue.' },
+  { id: 42, fr: "Mais ça n'a aucun sens !", en: "But that makes no sense!" },
+  { id: 43, fr: "J'ai acheté deux cafés, dont un pour toi.", en: 'I bought two coffees, one of which is for you.' },
+  { id: 44, fr: "Il n'est pas permis de fumer à l'intérieur.", en: 'It is not permitted to smoke inside.' },
+  { id: 45, fr: 'Un nouveau cas de grippe a été confirmé.', en: 'A new case of flu has been confirmed.' },
+  { id: 46, fr: "Le lave-vaisselle a besoin d'être réglé.", en: 'The dishwasher needs to be fixed.' },
+  { id: 47, fr: "C'est très gentil de ta part.", en: "That's very kind of you." },
+  { id: 48, fr: "Ce nuage a la forme d'un cœur.", en: 'This cloud has the shape of a heart.' },
+  { id: 49, fr: 'Nous venons juste de recevoir le courrier.', en: 'We just received the mail.' },
+  { id: 50, fr: "Je te l'apporte dès que possible.", en: "I'll bring it to you as soon as possible." },
+  { id: 51, fr: 'Malgré son absence, il a rendu son projet à temps.', en: 'Despite his absence, he handed in his project on time.' },
+  { id: 52, fr: "Importer est le contraire d'exporter.", en: 'To import is the opposite of to export.' },
+  { id: 53, fr: 'Les recettes varient selon les chefs.', en: 'Recipes vary according to the chefs.' },
+  { id: 54, fr: 'Nous avons tellement de choses à faire.', en: 'We have so many things to do.' },
+  { id: 55, fr: 'Le week-end est fait pour se reposer.', en: 'The weekend is made for resting.' },
+  { id: 56, fr: "Le meurtrier s'était déjà enfui.", en: 'The murderer had already fled.' },
+  { id: 57, fr: "Ce n'est pas bien de se moquer des gens.", en: "It's not good to make fun of people." },
+  { id: 58, fr: 'Est-ce que ce siège est libre ?', en: 'Is this seat free?' },
+  { id: 59, fr: "Je ne comprends pas comment j'ai raté cette faute.", en: "I don't understand how I missed this mistake." },
+  { id: 60, fr: 'Un nez cassé peut causer des difficultés respiratoires.', en: 'A broken nose can cause breathing difficulties.' },
+  { id: 61, fr: 'Il manque des feuilles dans ce dossier.', en: 'There are pages missing in this folder.' },
+  { id: 62, fr: 'Il a reçu autant que son père.', en: 'He received as much as his father.' },
+  { id: 63, fr: 'Je doute que cela soit vrai.', en: 'I doubt that this is true.' },
+  { id: 64, fr: "C'est mieux d'éviter cette route.", en: "It's better to avoid this road." },
+  { id: 65, fr: "N'oublie pas d'enregistrer ton travail.", en: "Don't forget to save your work." },
+  { id: 66, fr: 'Le départ du train est imminent.', en: 'The departure of the train is imminent.' },
+  { id: 67, fr: "Cela n'a pas l'air grave.", en: "That doesn't look serious." },
+  { id: 68, fr: "Certes, c'est difficile mais pas impossible.", en: "Granted, it's difficult but not impossible." },
+  { id: 69, fr: "C'est une des meilleures universités.", en: "It's one of the best universities." },
+  { id: 70, fr: 'Il refuse de me laisser entrer.', en: 'He refuses to let me in.' },
+  { id: 71, fr: 'La Terre tourne autour du soleil.', en: 'The Earth revolves around the sun.' },
+  { id: 72, fr: 'La vitamine D provient du soleil.', en: 'Vitamin D comes from the sun.' },
+  { id: 73, fr: 'La nouvelle application ne fonctionne pas bien.', en: "The new application doesn't work well." },
+  { id: 74, fr: 'Cela ne sert à rien de culpabiliser.', en: "There's no point in feeling guilty." },
+  { id: 75, fr: 'Il a osé faire ça ?', en: 'He dared to do that?' },
+  { id: 76, fr: "Selon la météo, il va pleuvoir cet après-midi.", en: "According to the weather forecast, it's going to rain this afternoon." },
+  { id: 77, fr: 'Leurs intentions ne sont pas tout à fait claires.', en: 'Their intentions are not entirely clear.' },
+  { id: 78, fr: "C'est un de mes clients.", en: 'He is one of my clients.' },
+  { id: 79, fr: 'Les femmes enceintes ont des envies surprenantes.', en: 'Pregnant women have surprising cravings.' },
+  { id: 80, fr: "A-t-on vraiment besoin d'une nouvelle voiture ?", en: 'Do we really need a new car?' },
+  { id: 81, fr: "Et voilà pourquoi il n'est pas venu en vacances avec nous.", en: "And that's why he didn't come on vacation with us." },
+  { id: 82, fr: "Je ne suis pas du tout d'accord avec ceci.", en: "I don't agree with this at all." },
+  { id: 83, fr: 'Nous déménageons car notre appartement est trop petit.', en: 'We are moving because our apartment is too small.' },
+  { id: 84, fr: 'Tout dépend de ses disponibilités.', en: 'It all depends on his/her availability.' },
+  { id: 85, fr: "Le magasin est en face de l'église.", en: 'The shop is opposite the church.' },
+  { id: 86, fr: "Est-ce qu'on est obligés d'y aller ?", en: 'Are we obliged to go there?' },
+  { id: 87, fr: 'Exprimer ses sentiments est difficile.', en: "Expressing one's feelings is difficult." },
+  { id: 88, fr: "J'habite également dans cette rue.", en: 'I also live on this street.' },
+  { id: 89, fr: "J'ai une douleur au genou.", en: 'I have a pain in my knee.' },
+  { id: 90, fr: "C'est un honneur d'être ici.", en: "It's an honour to be here." },
+];
+
+function load() {
+  try { return JSON.parse(localStorage.getItem(KEY)) || []; }
+  catch { return []; }
+}
+
+function save(d) { localStorage.setItem(KEY, JSON.stringify(d)); }
+
+(function sync() {
+  const d = load();
+  const ids = new Set(d.map(x => x.id));
+  MASTER.forEach(m => {
+    if (!ids.has(m.id)) d.push({ ...m, learned: false, mastered: false });
+  });
+  d.forEach(x => { if (x.mastered === undefined) x.mastered = false; });
+  d.sort((a, b) => a.id - b.id);
+  save(d);
+})();
+
+function toggleLearned(id) {
+  const d = load();
+  const item = d.find(x => x.id === id);
+  if (item) { item.learned = !item.learned; save(d); render(); }
+}
+
+function toggleMastered(id) {
+  const d = load();
+  const item = d.find(x => x.id === id);
+  if (item) { item.mastered = !item.mastered; save(d); render(); }
+}
+
+function deleteSentence(id) {
+  if (!confirm('Delete this sentence?')) return;
+  save(load().filter(x => x.id !== id));
+  render();
+}
+
+function setFilter(f, el) {
+  currentFilter = f;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  render();
+}
+
+function render() {
+  const d = load();
+  const q = document.getElementById('search').value.toLowerCase();
+
+  let filtered = d.filter(x => !q || x.fr.toLowerCase().includes(q) || x.en.toLowerCase().includes(q));
+  if (currentFilter === 'learned') filtered = filtered.filter(x => x.learned);
+  if (currentFilter === 'mastered') filtered = filtered.filter(x => x.mastered);
+  if (currentFilter === 'remaining') filtered = filtered.filter(x => !x.learned && !x.mastered);
+
+  const total = d.length;
+  const learned = d.filter(x => x.learned).length;
+  const mastered = d.filter(x => x.mastered).length;
+  const pct = total ? Math.round((learned + mastered) / (total * 2) * 100) : 0;
+
+  document.getElementById('stat-total').textContent = total;
+  document.getElementById('stat-learned').textContent = learned;
+  document.getElementById('stat-mastered').textContent = mastered;
+  document.getElementById('progress').style.width = pct + '%';
+
+  const list = document.getElementById('list');
+  const empty = document.getElementById('empty');
+  list.innerHTML = '';
+
+  if (filtered.length === 0) { empty.style.display = 'block'; return; }
+  empty.style.display = 'none';
+
+  filtered.forEach((x, i) => {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'card-wrapper';
+
+    const bg = document.createElement('div');
+    bg.className = 'swipe-bg';
+    bg.innerHTML = x.mastered ? '💚 Learning!' : '💚 Mark as Learning!';
+
+    const el = document.createElement('div');
+    let cls = 'sentence-item';
+    if (x.mastered) cls += ' mastered';
+    if (x.learned) cls += ' learned';
+    el.className = cls;
+
+    el.innerHTML = `
+      <div class="num">${i + 1}</div>
+      <div class="content">
+        <div class="french">${esc(x.fr)}</div>
+        ${x.en ? `<div class="english">${esc(x.en)}</div>` : ''}
+        <div class="mastered-badge">💚 Learning</div>
+      </div>
+      <div class="btns">
+        <button class="btn-speak" onclick="speak(this, ${x.id})">🔊</button>
+        <button class="btn-learn" onclick="toggleLearned(${x.id})">✓</button>
+        <button class="btn-del" onclick="deleteSentence(${x.id})">✕</button>
+      </div>
+    `;
+
+    wrapper.appendChild(bg);
+    wrapper.appendChild(el);
+    list.appendChild(wrapper);
+
+    // Swipe logic
+    let startX = 0, startY = 0, dragging = false;
+    const THRESHOLD = 80;
+
+    function onStart(clientX, clientY) {
+      startX = clientX;
+      startY = clientY;
+      dragging = true;
+      el.style.transition = 'none';
+    }
+
+    function onMove(clientX, clientY) {
+      if (!dragging) return;
+      const dx = clientX - startX;
+      const dy = Math.abs(clientY - startY);
+      if (dy > 30) { dragging = false; el.style.transform = ''; return; }
+      if (dx > 0) el.style.transform = `translateX(${Math.min(dx, 120)}px)`;
+    }
+
+    function onEnd(clientX) {
+      if (!dragging) return;
+      dragging = false;
+      const dx = clientX - startX;
+      el.style.transition = 'transform 0.3s ease';
+      el.style.transform = '';
+      if (dx > THRESHOLD) toggleMastered(x.id);
+    }
+
+    el.addEventListener('touchstart', e => onStart(e.touches[0].clientX, e.touches[0].clientY), { passive: true });
+    el.addEventListener('touchmove', e => onMove(e.touches[0].clientX, e.touches[0].clientY), { passive: true });
+    el.addEventListener('touchend', e => onEnd(e.changedTouches[0].clientX));
+
+    el.addEventListener('mousedown', e => onStart(e.clientX, e.clientY));
+    window.addEventListener('mousemove', e => { if (dragging) onMove(e.clientX, e.clientY); });
+    window.addEventListener('mouseup', e => { if (dragging) onEnd(e.clientX); });
+  });
+}
+
+function speak(btn, id) {
+  const d = load();
+  const item = d.find(x => x.id === id);
+  if (!item) return;
+  window.speechSynthesis.cancel();
+  const utter = new SpeechSynthesisUtterance(item.fr);
+  utter.lang = 'fr-FR';
+  utter.rate = 0.9;
+  btn.classList.add('speaking');
+  utter.onend = () => btn.classList.remove('speaking');
+  utter.onerror = () => btn.classList.remove('speaking');
+  window.speechSynthesis.speak(utter);
+}
+
+function esc(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/'/g,'&#39;');
+}
+
+render();
+</script>
+</body>
+</html>
