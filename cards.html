@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>French Cards</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: sans-serif;
+    background: #111;
+    color: #fff;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px 16px 40px;
+  }
+
+  header {
+    width: 100%;
+    max-width: 480px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+
+  header a {
+    color: #888;
+    font-size: 13px;
+    text-decoration: none;
+  }
+
+  header a:hover { color: #fff; }
+
+  .counter {
+    font-size: 13px;
+    color: #888;
+  }
+
+  .progress-bar {
+    width: 100%;
+    max-width: 480px;
+    height: 3px;
+    background: #333;
+    border-radius: 2px;
+    margin-bottom: 24px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: #4caf50;
+    border-radius: 2px;
+    transition: width 0.4s ease;
+  }
+
+  /* Card scene */
+  .scene {
+    width: 100%;
+    max-width: 480px;
+    height: 420px;
+    perspective: 1000px;
+    cursor: pointer;
+    margin-bottom: 24px;
+  }
+
+  .card {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    transform-style: preserve-3d;
+    transition: transform 0.55s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .card.flipped { transform: rotateY(180deg); }
+
+  .face {
+    position: absolute;
+    inset: 0;
+    border-radius: 16px;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    overflow: hidden;
+  }
+
+  /* Front face */
+  .front {
+    background: #1a1a1a;
+    border: 1px solid #333;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+  }
+
+  .front img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 16px;
+    display: block;
+  }
+
+  .front .img-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to bottom, transparent 50%, rgba(0,0,0,0.7) 100%);
+    border-radius: 16px;
+  }
+
+  .front .tap-hint {
+    position: absolute;
+    bottom: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 12px;
+    color: rgba(255,255,255,0.7);
+    background: rgba(0,0,0,0.4);
+    padding: 4px 12px;
+    border-radius: 20px;
+    white-space: nowrap;
+  }
+
+  .front .speak-btn {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    background: rgba(0,0,0,0.5);
+    border: none;
+    color: #fff;
+    font-size: 22px;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(4px);
+    transition: background 0.2s;
+  }
+
+  .front .speak-btn:hover { background: rgba(0,0,0,0.75); }
+  .front .speak-btn.speaking { background: #0055cc; }
+
+  /* Loading state on front */
+  .img-loading {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    color: #666;
+    font-size: 13px;
+  }
+
+  .spinner {
+    width: 32px;
+    height: 32px;
+    border: 3px solid #333;
+    border-top-color: #4caf50;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Back face */
+  .back {
+    background: #1a1a1a;
+    border: 1px solid #333;
+    transform: rotateY(180deg);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .back img {
+    width: 100%;
+    height: 220px;
+    object-fit: cover;
+    border-radius: 16px 16px 0 0;
+    display: block;
+    flex-shrink: 0;
+  }
+
+  .back .text-area {
+    flex: 1;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 10px;
+  }
+
+  .back .french {
+    font-size: 20px;
+    font-weight: bold;
+    color: #fff;
+    line-height: 1.35;
+  }
+
+  .back .english {
+    font-size: 14px;
+    color: #aaa;
+    line-height: 1.4;
+  }
+
+  .back .actions {
+    display: flex;
+    gap: 8px;
+    padding: 0 20px 20px;
+  }
+
+  .back .actions button {
+    flex: 1;
+    padding: 10px;
+    border-radius: 8px;
+    border: none;
+    font-size: 13px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: opacity 0.2s;
+  }
+
+  .back .actions button:hover { opacity: 0.85; }
+
+  .btn-again { background: #444; color: #fff; }
+  .btn-got-it { background: #4caf50; color: #fff; }
+
+  /* Navigation */
+  .nav {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    width: 100%;
+    max-width: 480px;
+    justify-content: center;
+  }
+
+  .nav button {
+    background: #222;
+    border: 1px solid #444;
+    color: #fff;
+    padding: 10px 24px;
+    border-radius: 8px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+
+  .nav button:hover { background: #333; }
+  .nav button:disabled { opacity: 0.3; cursor: default; }
+
+  .nav .num {
+    font-size: 14px;
+    color: #666;
+    min-width: 60px;
+    text-align: center;
+  }
+
+  /* Done screen */
+  .done {
+    text-align: center;
+    padding: 60px 20px;
+  }
+
+  .done h2 { font-size: 28px; margin-bottom: 8px; }
+  .done p { color: #888; font-size: 14px; margin-bottom: 24px; }
+  .done a {
+    display: inline-block;
+    padding: 10px 24px;
+    background: #4caf50;
+    color: #fff;
+    border-radius: 8px;
+    text-decoration: none;
+    font-size: 14px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <a href="index.html">← Back to list</a>
+  <span class="counter" id="counter"></span>
+</header>
+
+<div class="progress-bar">
+  <div class="progress-fill" id="progress"></div>
+</div>
+
+<div class="scene" id="scene" onclick="flipCard()">
+  <div class="card" id="card">
+
+    <!-- Front -->
+    <div class="face front" id="front">
+      <div class="img-loading" id="loading">
+        <div class="spinner"></div>
+        <span>Generating image…</span>
+      </div>
+      <img id="front-img" src="" alt="" style="display:none" onload="imgLoaded()" onerror="imgError()">
+      <div class="img-overlay" id="overlay" style="display:none"></div>
+      <div class="tap-hint" id="tap-hint" style="display:none">Tap to reveal</div>
+      <button class="speak-btn" id="speak-btn" onclick="event.stopPropagation(); speak()" style="display:none">🔊</button>
+    </div>
+
+    <!-- Back -->
+    <div class="face back" id="back">
+      <img id="back-img" src="" alt="">
+      <div class="text-area">
+        <div class="french" id="back-french"></div>
+        <div class="english" id="back-english"></div>
+      </div>
+      <div class="actions">
+        <button class="btn-again" onclick="event.stopPropagation(); markAgain()">🔁 Again</button>
+        <button class="btn-got-it" onclick="event.stopPropagation(); markGotIt()">✓ Got it</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="nav">
+  <button id="btn-prev" onclick="go(-1)">← Prev</button>
+  <span class="num" id="nav-num"></span>
+  <button id="btn-next" onclick="go(1)">Next →</button>
+</div>
+
+<script>
+const SENTENCES = [
+  { id: 1,  fr: 'Chéri, est-ce que tu veux quelque chose ?', en: 'Honey, do you want something?' },
+  { id: 2,  fr: 'Le policier a empêché un homme de sauter.', en: 'The police officer prevented a man from jumping.' },
+  { id: 3,  fr: 'Elle fait toujours ce qui lui plaît.', en: 'She always does what she likes.' },
+  { id: 4,  fr: 'La rivière commence à geler.', en: 'The river is starting to freeze.' },
+  { id: 5,  fr: 'La pleine lune arrive plus ou moins une fois par mois.', en: 'The full moon comes more or less once a month.' },
+  { id: 6,  fr: "Il réussit toujours tout ce qu'il veut.", en: 'He always succeeds in everything he wants.' },
+  { id: 7,  fr: 'La peau est faite de trois couches.', en: 'The skin is made of three layers.' },
+  { id: 8,  fr: 'Vous me manquez beaucoup.', en: 'I miss you very much.' },
+  { id: 9,  fr: 'Ce film est long et ennuyant.', en: 'This movie is long and boring.' },
+  { id: 10, fr: "L'argent ne fait pas le bonheur.", en: "Money doesn't buy happiness." },
+  { id: 11, fr: 'Il demande un conseil au professeur.', en: 'He asks the teacher for advice.' },
+  { id: 12, fr: 'Il a de bonnes notes en général.', en: 'He generally gets good grades.' },
+  { id: 13, fr: "C'est fou comme vous vous ressemblez.", en: "It's crazy how much you look alike." },
+  { id: 14, fr: "C'est mal de se moquer des autres.", en: "It's wrong to make fun of others." },
+  { id: 15, fr: 'Les habitants ont été sauvés par les pompiers.', en: 'The residents were saved by the firefighters.' },
+  { id: 16, fr: 'Cette voiture a été vendue aux enchères.', en: 'This car was sold at auction.' },
+  { id: 17, fr: "Tant que le projet est terminé, cela m'est égal.", en: "As long as the project is finished, it doesn't matter to me." },
+  { id: 18, fr: "C'est aussi simple que ça.", en: "It's as simple as that." },
+  { id: 19, fr: 'Rien de tel que des fruits frais.', en: "There's nothing like fresh fruit." },
+  { id: 20, fr: 'La taille S ne lui va plus.', en: "Size S doesn't fit him/her anymore." },
+  { id: 21, fr: "J'ai un doute, je ne suis pas certaine.", en: "I have a doubt, I'm not certain." },
+  { id: 22, fr: "Sois honnête et arrête de mentir.", en: 'Be honest and stop lying.' },
+  { id: 23, fr: 'Le technicien tente de résoudre le problème.', en: 'The technician is trying to solve the problem.' },
+  { id: 24, fr: "Une infection de l'oreille doit être surveillée de près.", en: 'An ear infection must be monitored closely.' },
+  { id: 25, fr: "Peux-tu emmener ta sœur à l'école ?", en: 'Can you take your sister to school?' },
+  { id: 26, fr: "Quelqu'un frappe à la porte.", en: 'Someone is knocking at the door.' },
+  { id: 27, fr: 'Donner son sang sauve des vies.', en: 'Donating blood saves lives.' },
+  { id: 28, fr: "J'ai entendu un bruit étrange dehors.", en: 'I heard a strange noise outside.' },
+  { id: 29, fr: "C'est fou ça !", en: "That's crazy!" },
+  { id: 30, fr: "Tellement d'espèces sont en voie de disparition.", en: 'So many species are endangered.' },
+  { id: 31, fr: "Personne n'a jamais su la vérité dans cette affaire.", en: 'Nobody ever knew the truth in this matter.' },
+  { id: 32, fr: 'Nous avons un peu de temps avant que le train ne parte.', en: 'We have a little time before the train leaves.' },
+  { id: 33, fr: 'Il est devenu docteur en 2005.', en: 'He became a doctor in 2005.' },
+  { id: 34, fr: 'Bruges est une des plus belles villes de Belgique.', en: 'Bruges is one of the most beautiful cities in Belgium.' },
+  { id: 35, fr: "Je n'arrive pas à retenir la dictée.", en: "I can't manage to memorize the dictation." },
+  { id: 36, fr: 'Quelle sorte de fromage préfères-tu ?', en: 'What kind of cheese do you prefer?' },
+  { id: 37, fr: "J'ai ressenti beaucoup de satisfaction à finir ce projet.", en: 'I felt a lot of satisfaction in finishing this project.' },
+  { id: 38, fr: 'Il est arrivé pendant que nous mangions.', en: 'He arrived while we were eating.' },
+  { id: 39, fr: "C'est rare de gagner à la loterie.", en: "It's rare to win the lottery." },
+  { id: 40, fr: "Rien de tel qu'un bon café.", en: "There's nothing like a good coffee." },
+  { id: 41, fr: 'La réunion sera à propos de la perte de revenus.', en: 'The meeting will be about the loss of revenue.' },
+  { id: 42, fr: "Mais ça n'a aucun sens !", en: "But that makes no sense!" },
+  { id: 43, fr: "J'ai acheté deux cafés, dont un pour toi.", en: 'I bought two coffees, one of which is for you.' },
+  { id: 44, fr: "Il n'est pas permis de fumer à l'intérieur.", en: 'It is not permitted to smoke inside.' },
+  { id: 45, fr: 'Un nouveau cas de grippe a été confirmé.', en: 'A new case of flu has been confirmed.' },
+  { id: 46, fr: "Le lave-vaisselle a besoin d'être réglé.", en: 'The dishwasher needs to be fixed.' },
+  { id: 47, fr: "C'est très gentil de ta part.", en: "That's very kind of you." },
+  { id: 48, fr: "Ce nuage a la forme d'un cœur.", en: 'This cloud has the shape of a heart.' },
+  { id: 49, fr: 'Nous venons juste de recevoir le courrier.', en: 'We just received the mail.' },
+  { id: 50, fr: "Je te l'apporte dès que possible.", en: "I'll bring it to you as soon as possible." },
+  { id: 51, fr: 'Malgré son absence, il a rendu son projet à temps.', en: 'Despite his absence, he handed in his project on time.' },
+  { id: 52, fr: "Importer est le contraire d'exporter.", en: 'To import is the opposite of to export.' },
+  { id: 53, fr: 'Les recettes varient selon les chefs.', en: 'Recipes vary according to the chefs.' },
+  { id: 54, fr: 'Nous avons tellement de choses à faire.', en: 'We have so many things to do.' },
+  { id: 55, fr: 'Le week-end est fait pour se reposer.', en: 'The weekend is made for resting.' },
+  { id: 56, fr: "Le meurtrier s'était déjà enfui.", en: 'The murderer had already fled.' },
+  { id: 57, fr: "Ce n'est pas bien de se moquer des gens.", en: "It's not good to make fun of people." },
+  { id: 58, fr: 'Est-ce que ce siège est libre ?', en: 'Is this seat free?' },
+  { id: 59, fr: "Je ne comprends pas comment j'ai raté cette faute.", en: "I don't understand how I missed this mistake." },
+  { id: 60, fr: 'Un nez cassé peut causer des difficultés respiratoires.', en: 'A broken nose can cause breathing difficulties.' },
+  { id: 61, fr: 'Il manque des feuilles dans ce dossier.', en: 'There are pages missing in this folder.' },
+  { id: 62, fr: 'Il a reçu autant que son père.', en: 'He received as much as his father.' },
+  { id: 63, fr: 'Je doute que cela soit vrai.', en: 'I doubt that this is true.' },
+  { id: 64, fr: "C'est mieux d'éviter cette route.", en: "It's better to avoid this road." },
+  { id: 65, fr: "N'oublie pas d'enregistrer ton travail.", en: "Don't forget to save your work." },
+  { id: 66, fr: 'Le départ du train est imminent.', en: 'The departure of the train is imminent.' },
+  { id: 67, fr: "Cela n'a pas l'air grave.", en: "That doesn't look serious." },
+  { id: 68, fr: "Certes, c'est difficile mais pas impossible.", en: "Granted, it's difficult but not impossible." },
+  { id: 69, fr: "C'est une des meilleures universités.", en: "It's one of the best universities." },
+  { id: 70, fr: 'Il refuse de me laisser entrer.', en: 'He refuses to let me in.' },
+  { id: 71, fr: 'La Terre tourne autour du soleil.', en: 'The Earth revolves around the sun.' },
+  { id: 72, fr: 'La vitamine D provient du soleil.', en: 'Vitamin D comes from the sun.' },
+  { id: 73, fr: 'La nouvelle application ne fonctionne pas bien.', en: "The new application doesn't work well." },
+  { id: 74, fr: 'Cela ne sert à rien de culpabiliser.', en: "There's no point in feeling guilty." },
+  { id: 75, fr: 'Il a osé faire ça ?', en: 'He dared to do that?' },
+  { id: 76, fr: "Selon la météo, il va pleuvoir cet après-midi.", en: "According to the weather forecast, it's going to rain this afternoon." },
+  { id: 77, fr: 'Leurs intentions ne sont pas tout à fait claires.', en: 'Their intentions are not entirely clear.' },
+  { id: 78, fr: "C'est un de mes clients.", en: 'He is one of my clients.' },
+  { id: 79, fr: 'Les femmes enceintes ont des envies surprenantes.', en: 'Pregnant women have surprising cravings.' },
+  { id: 80, fr: "A-t-on vraiment besoin d'une nouvelle voiture ?", en: 'Do we really need a new car?' },
+  { id: 81, fr: "Et voilà pourquoi il n'est pas venu en vacances avec nous.", en: "And that's why he didn't come on vacation with us." },
+  { id: 82, fr: "Je ne suis pas du tout d'accord avec ceci.", en: "I don't agree with this at all." },
+  { id: 83, fr: 'Nous déménageons car notre appartement est trop petit.', en: 'We are moving because our apartment is too small.' },
+  { id: 84, fr: 'Tout dépend de ses disponibilités.', en: 'It all depends on his/her availability.' },
+  { id: 85, fr: "Le magasin est en face de l'église.", en: 'The shop is opposite the church.' },
+  { id: 86, fr: "Est-ce qu'on est obligés d'y aller ?", en: 'Are we obliged to go there?' },
+  { id: 87, fr: 'Exprimer ses sentiments est difficile.', en: "Expressing one's feelings is difficult." },
+  { id: 88, fr: "J'habite également dans cette rue.", en: 'I also live on this street.' },
+  { id: 89, fr: "J'ai une douleur au genou.", en: 'I have a pain in my knee.' },
+  { id: 90, fr: "C'est un honneur d'être ici.", en: "It's an honour to be here." },
+];
+
+let index = 0;
+let isFlipped = false;
+let imgUrl = '';
+
+function imageUrl(sentence) {
+  const prompt = encodeURIComponent(
+    sentence.en + ', simple illustration, flat design, colorful, no text'
+  );
+  return `https://image.pollinations.ai/prompt/${prompt}?width=480&height=420&nologo=true&seed=${sentence.id}`;
+}
+
+function loadCard() {
+  const s = SENTENCES[index];
+  isFlipped = false;
+
+  const card = document.getElementById('card');
+  card.classList.remove('flipped');
+
+  // Reset front
+  const frontImg = document.getElementById('front-img');
+  frontImg.style.display = 'none';
+  document.getElementById('overlay').style.display = 'none';
+  document.getElementById('tap-hint').style.display = 'none';
+  document.getElementById('speak-btn').style.display = 'none';
+  document.getElementById('loading').style.display = 'flex';
+
+  // Load image
+  imgUrl = imageUrl(s);
+  frontImg.src = imgUrl;
+
+  // Back
+  document.getElementById('back-img').src = imgUrl;
+  document.getElementById('back-french').textContent = s.fr;
+  document.getElementById('back-english').textContent = s.en;
+
+  // Counter
+  document.getElementById('counter').textContent = `${index + 1} / ${SENTENCES.length}`;
+  document.getElementById('nav-num').textContent = `${index + 1} / ${SENTENCES.length}`;
+  document.getElementById('progress').style.width = ((index + 1) / SENTENCES.length * 100) + '%';
+
+  document.getElementById('btn-prev').disabled = index === 0;
+  document.getElementById('btn-next').disabled = index === SENTENCES.length - 1;
+}
+
+function imgLoaded() {
+  document.getElementById('loading').style.display = 'none';
+  document.getElementById('front-img').style.display = 'block';
+  document.getElementById('overlay').style.display = 'block';
+  document.getElementById('tap-hint').style.display = 'block';
+  document.getElementById('speak-btn').style.display = 'flex';
+  // Auto-play voice when image loads
+  speak();
+}
+
+function imgError() {
+  document.getElementById('loading').innerHTML = '<span style="font-size:48px">🖼️</span><span>Image unavailable</span>';
+  document.getElementById('tap-hint').style.display = 'block';
+  document.getElementById('speak-btn').style.display = 'flex';
+  speak();
+}
+
+function flipCard() {
+  isFlipped = !isFlipped;
+  document.getElementById('card').classList.toggle('flipped', isFlipped);
+}
+
+function speak() {
+  const s = SENTENCES[index];
+  window.speechSynthesis.cancel();
+  const utter = new SpeechSynthesisUtterance(s.fr);
+  utter.lang = 'fr-FR';
+  utter.rate = 0.9;
+  const btn = document.getElementById('speak-btn');
+  btn.classList.add('speaking');
+  utter.onend = () => btn.classList.remove('speaking');
+  utter.onerror = () => btn.classList.remove('speaking');
+  window.speechSynthesis.speak(utter);
+}
+
+function go(dir) {
+  window.speechSynthesis.cancel();
+  index = Math.max(0, Math.min(SENTENCES.length - 1, index + dir));
+  loadCard();
+}
+
+function markGotIt() {
+  if (index < SENTENCES.length - 1) go(1);
+}
+
+function markAgain() {
+  // Flip back to front to review again
+  isFlipped = false;
+  document.getElementById('card').classList.remove('flipped');
+  speak();
+}
+
+loadCard();
+</script>
+</body>
+</html>
