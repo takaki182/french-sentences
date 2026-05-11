@@ -24,21 +24,41 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 20px;
+    margin-bottom: 16px;
   }
 
-  header a {
-    color: #888;
-    font-size: 13px;
-    text-decoration: none;
-  }
-
+  header a { color: #888; font-size: 13px; text-decoration: none; }
   header a:hover { color: #fff; }
 
-  .counter {
-    font-size: 13px;
+  .session-stats {
+    display: flex;
+    gap: 12px;
+    width: 100%;
+    max-width: 480px;
+    margin-bottom: 16px;
+  }
+
+  .stat-pill {
+    flex: 1;
+    background: #1e1e1e;
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 8px;
+    text-align: center;
+    font-size: 11px;
     color: #888;
   }
+
+  .stat-pill strong {
+    display: block;
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 2px;
+  }
+
+  .stat-pill.new strong { color: #4a9eff; }
+  .stat-pill.due strong { color: #ff9f43; }
+  .stat-pill.done strong { color: #4caf50; }
 
   .progress-bar {
     width: 100%;
@@ -46,7 +66,7 @@
     height: 3px;
     background: #333;
     border-radius: 2px;
-    margin-bottom: 24px;
+    margin-bottom: 20px;
     overflow: hidden;
   }
 
@@ -64,7 +84,7 @@
     height: 420px;
     perspective: 1000px;
     cursor: pointer;
-    margin-bottom: 24px;
+    margin-bottom: 20px;
   }
 
   .card {
@@ -90,11 +110,6 @@
   .front {
     background: #1a1a1a;
     border: 1px solid #333;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 0;
   }
 
   .front img {
@@ -132,7 +147,7 @@
     background: rgba(0,0,0,0.5);
     border: none;
     color: #fff;
-    font-size: 22px;
+    font-size: 20px;
     width: 44px;
     height: 44px;
     border-radius: 50%;
@@ -147,10 +162,90 @@
   .front .speak-btn:hover { background: rgba(0,0,0,0.75); }
   .front .speak-btn.speaking { background: #0055cc; }
 
-  /* Loading state on front */
-  .img-loading {
+  .img-placeholder {
     position: absolute;
     inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    color: #555;
+    font-size: 13px;
+  }
+
+  /* Back face */
+  .back {
+    background: #1a1a1a;
+    border: 1px solid #333;
+    transform: rotateY(180deg);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .back img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    border-radius: 16px 16px 0 0;
+    display: block;
+    flex-shrink: 0;
+  }
+
+  .back .text-area {
+    flex: 1;
+    padding: 16px 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .back .french {
+    font-size: 19px;
+    font-weight: bold;
+    color: #fff;
+    line-height: 1.35;
+  }
+
+  .back .english {
+    font-size: 13px;
+    color: #aaa;
+    line-height: 1.4;
+  }
+
+  /* Anki rating buttons */
+  .anki-btns {
+    display: flex;
+    gap: 8px;
+    padding: 0 16px 16px;
+  }
+
+  .anki-btns button {
+    flex: 1;
+    padding: 10px 6px;
+    border-radius: 8px;
+    border: none;
+    font-size: 12px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: opacity 0.15s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    line-height: 1.2;
+  }
+
+  .anki-btns button:hover { opacity: 0.85; }
+  .anki-btns button span.interval { font-size: 10px; font-weight: normal; opacity: 0.8; }
+
+  .btn-again { background: #c0392b; color: #fff; }
+  .btn-good  { background: #4caf50; color: #fff; }
+  .btn-easy  { background: #4a9eff; color: #fff; }
+
+  /* Loading screen */
+  .loading-screen {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -158,6 +253,9 @@
     gap: 12px;
     color: #666;
     font-size: 13px;
+    padding: 60px 0;
+    width: 100%;
+    max-width: 480px;
   }
 
   .spinner {
@@ -171,115 +269,29 @@
 
   @keyframes spin { to { transform: rotate(360deg); } }
 
-  /* Back face */
-  .back {
-    background: #1a1a1a;
-    border: 1px solid #333;
-    transform: rotateY(180deg);
-    display: flex;
+  /* Done screen */
+  .done-screen {
+    display: none;
     flex-direction: column;
-  }
-
-  .back img {
-    width: 100%;
-    height: 220px;
-    object-fit: cover;
-    border-radius: 16px 16px 0 0;
-    display: block;
-    flex-shrink: 0;
-  }
-
-  .back .text-area {
-    flex: 1;
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    gap: 10px;
-  }
-
-  .back .french {
-    font-size: 20px;
-    font-weight: bold;
-    color: #fff;
-    line-height: 1.35;
-  }
-
-  .back .english {
-    font-size: 14px;
-    color: #aaa;
-    line-height: 1.4;
-  }
-
-  .back .actions {
-    display: flex;
-    gap: 8px;
-    padding: 0 20px 20px;
-  }
-
-  .back .actions button {
-    flex: 1;
-    padding: 10px;
-    border-radius: 8px;
-    border: none;
-    font-size: 13px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: opacity 0.2s;
-  }
-
-  .back .actions button:hover { opacity: 0.85; }
-
-  .btn-again { background: #444; color: #fff; }
-  .btn-got-it { background: #4caf50; color: #fff; }
-
-  /* Navigation */
-  .nav {
-    display: flex;
     align-items: center;
-    gap: 16px;
+    text-align: center;
+    padding: 40px 20px;
     width: 100%;
     max-width: 480px;
-    justify-content: center;
+    gap: 12px;
   }
 
-  .nav button {
-    background: #222;
-    border: 1px solid #444;
+  .done-screen h2 { font-size: 26px; }
+  .done-screen p { color: #888; font-size: 14px; }
+  .done-screen button {
+    margin-top: 8px;
+    padding: 10px 28px;
+    background: #4caf50;
     color: #fff;
-    padding: 10px 24px;
+    border: none;
     border-radius: 8px;
     font-size: 14px;
     cursor: pointer;
-    transition: background 0.2s;
-  }
-
-  .nav button:hover { background: #333; }
-  .nav button:disabled { opacity: 0.3; cursor: default; }
-
-  .nav .num {
-    font-size: 14px;
-    color: #666;
-    min-width: 60px;
-    text-align: center;
-  }
-
-  /* Done screen */
-  .done {
-    text-align: center;
-    padding: 60px 20px;
-  }
-
-  .done h2 { font-size: 28px; margin-bottom: 8px; }
-  .done p { color: #888; font-size: 14px; margin-bottom: 24px; }
-  .done a {
-    display: inline-block;
-    padding: 10px 24px;
-    background: #4caf50;
-    color: #fff;
-    border-radius: 8px;
-    text-decoration: none;
-    font-size: 14px;
   }
 </style>
 </head>
@@ -287,51 +299,69 @@
 
 <header>
   <a href="index.html">← Back to list</a>
-  <span class="counter" id="counter"></span>
+  <span id="header-info" style="font-size:13px;color:#666"></span>
 </header>
+
+<div class="session-stats" id="session-stats">
+  <div class="stat-pill new"><strong id="stat-new">0</strong>New</div>
+  <div class="stat-pill due"><strong id="stat-due">0</strong>Due</div>
+  <div class="stat-pill done"><strong id="stat-done">0</strong>Done</div>
+</div>
 
 <div class="progress-bar">
   <div class="progress-fill" id="progress"></div>
 </div>
 
-<div class="scene" id="scene" onclick="flipCard()">
-  <div class="card" id="card">
+<div class="loading-screen" id="loading-screen">
+  <div class="spinner"></div>
+  <span>Checking images…</span>
+</div>
 
-    <!-- Front -->
+<div class="scene" id="scene" style="display:none" onclick="flipCard()">
+  <div class="card" id="card">
     <div class="face front" id="front">
-      <div class="img-loading" id="loading">
-        <div class="spinner"></div>
-        <span>Generating image…</span>
+      <div class="img-placeholder" id="placeholder" style="display:none">
+        <span style="font-size:48px">🖼️</span>
+        <span>No image</span>
       </div>
       <img id="front-img" src="" alt="" style="display:none" onload="imgLoaded()" onerror="imgError()">
       <div class="img-overlay" id="overlay" style="display:none"></div>
-      <div class="tap-hint" id="tap-hint" style="display:none">Tap to reveal</div>
-      <button class="speak-btn" id="speak-btn" onclick="event.stopPropagation(); speak()" style="display:none">🔊</button>
+      <div class="tap-hint">Tap to reveal</div>
+      <button class="speak-btn" id="speak-btn" onclick="event.stopPropagation(); speak()">🔊</button>
     </div>
-
-    <!-- Back -->
-    <div class="face back" id="back">
+    <div class="face back">
       <img id="back-img" src="" alt="">
       <div class="text-area">
         <div class="french" id="back-french"></div>
         <div class="english" id="back-english"></div>
       </div>
-      <div class="actions">
-        <button class="btn-again" onclick="event.stopPropagation(); markAgain()">🔁 Again</button>
-        <button class="btn-got-it" onclick="event.stopPropagation(); markGotIt()">✓ Got it</button>
+      <div class="anki-btns">
+        <button class="btn-again" onclick="event.stopPropagation(); rate('again')">
+          Again<span class="interval" id="lbl-again"></span>
+        </button>
+        <button class="btn-good" onclick="event.stopPropagation(); rate('good')">
+          Good<span class="interval" id="lbl-good"></span>
+        </button>
+        <button class="btn-easy" onclick="event.stopPropagation(); rate('easy')">
+          Easy<span class="interval" id="lbl-easy"></span>
+        </button>
       </div>
     </div>
-
   </div>
 </div>
 
-<div class="nav">
-  <button id="btn-prev" onclick="go(-1)">← Prev</button>
-  <span class="num" id="nav-num"></span>
-  <button id="btn-next" onclick="go(1)">Next →</button>
+<div class="done-screen" id="done-screen">
+  <div style="font-size:48px">🎉</div>
+  <h2>Session complete!</h2>
+  <p id="done-msg"></p>
+  <button onclick="restartSession()">Study again</button>
+  <a href="index.html" style="color:#888;font-size:13px;margin-top:4px">Back to list</a>
 </div>
 
 <script>
+const ANKI_KEY = 'french_anki_v2';
+const DAY = 24 * 60 * 60 * 1000;
+
 const SENTENCES = [
   { id: 1,  fr: 'Chéri, est-ce que tu veux quelque chose ?', en: 'Honey, do you want something?' },
   { id: 2,  fr: 'Le policier a empêché un homme de sauter.', en: 'The police officer prevented a man from jumping.' },
@@ -425,76 +455,243 @@ const SENTENCES = [
   { id: 90, fr: "C'est un honneur d'être ici.", en: "It's an honour to be here." },
 ];
 
-let index = 0;
-let isFlipped = false;
-let imgUrl = '';
-
-function imageUrl(sentence) {
-  const prompt = encodeURIComponent(
-    sentence.en + ', simple illustration, flat design, colorful, no text'
-  );
-  return `https://image.pollinations.ai/prompt/${prompt}?width=480&height=420&nologo=true&seed=${sentence.id}`;
+// ── Helpers ───────────────────────────────────────────────
+function toSlug(en) {
+  return en.toLowerCase().replace(/[^a-z0-9\s]/g, '').trim().replace(/\s+/g, '_');
 }
 
-function loadCard() {
-  const s = SENTENCES[index];
-  isFlipped = false;
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
 
-  const card = document.getElementById('card');
-  card.classList.remove('flipped');
+function fmtInterval(days) {
+  if (days < 1) return '< 1d';
+  if (days === 1) return '1 day';
+  if (days < 30) return `${days}d`;
+  if (days < 365) return `${Math.round(days / 30)}mo`;
+  return `${Math.round(days / 365)}yr`;
+}
 
-  // Reset front
+// ── Anki SRS ──────────────────────────────────────────────
+function loadAnki() {
+  try { return JSON.parse(localStorage.getItem(ANKI_KEY)) || {}; } catch { return {}; }
+}
+
+function saveAnki(d) { localStorage.setItem(ANKI_KEY, JSON.stringify(d)); }
+
+function getCard(id) {
+  return loadAnki()[id] || { interval: 0, ease: 2.5, due: 0 };
+}
+
+function calcNext(id, rating) {
+  const c = getCard(id);
+  const now = Date.now();
+  let { interval, ease } = c;
+
+  if (rating === 'again') {
+    interval = 0;
+    ease = Math.max(1.3, ease - 0.2);
+  } else if (rating === 'good') {
+    interval = interval < 1 ? 1 : Math.round(interval * ease);
+    ease = ease;
+  } else { // easy
+    interval = interval < 1 ? 4 : Math.round(interval * ease * 1.3);
+    ease = Math.min(3.0, ease + 0.1);
+  }
+
+  return { interval, ease, due: now + interval * DAY };
+}
+
+function previewIntervals(id) {
+  return {
+    again: 0,
+    good:  calcNext(id, 'good').interval,
+    easy:  calcNext(id, 'easy').interval,
+  };
+}
+
+// ── Image detection ───────────────────────────────────────
+function checkImage(s) {
+  return new Promise(resolve => {
+    const tryExt = (ext, fallback) => {
+      const img = new Image();
+      img.onload = () => resolve({ sentence: s, src: img.src });
+      img.onerror = fallback;
+      img.src = `images/${toSlug(s.en)}.${ext}`;
+    };
+    tryExt('png', () => tryExt('jpg', () => resolve(null)));
+  });
+}
+
+async function detectAvailable() {
+  const results = await Promise.all(SENTENCES.map(checkImage));
+  return results.filter(Boolean);
+}
+
+// ── Session queue ─────────────────────────────────────────
+let queue = [];       // cards to show this session (shuffled due cards first)
+let sessionDone = 0;
+let againQueue = [];  // cards marked "again" go here for re-review
+let current = null;
+let availableMap = {}; // id → src
+
+function buildQueue(available) {
+  const anki = loadAnki();
+  const now = Date.now();
+
+  const newCards = [];
+  const dueCards = [];
+
+  available.forEach(({ sentence: s, src }) => {
+    availableMap[s.id] = src;
+    const c = anki[s.id];
+    if (!c || c.interval === 0) {
+      newCards.push(s);
+    } else if (c.due <= now) {
+      dueCards.push(s);
+    }
+  });
+
+  shuffle(newCards);
+  shuffle(dueCards);
+  queue = [...dueCards, ...newCards];
+  sessionDone = 0;
+  againQueue = [];
+
+  updateStats(available.length);
+}
+
+function updateStats(total) {
+  const anki = loadAnki();
+  const now = Date.now();
+  let newCount = 0, dueCount = 0;
+
+  Object.values(availableMap).length; // just using availableMap keys
+  Object.keys(availableMap).forEach(id => {
+    const c = anki[id];
+    if (!c || c.interval === 0) newCount++;
+    else if (c.due <= now) dueCount++;
+  });
+
+  document.getElementById('stat-new').textContent = newCount;
+  document.getElementById('stat-due').textContent = dueCount;
+  document.getElementById('stat-done').textContent = sessionDone;
+  document.getElementById('header-info').textContent = `${Object.keys(availableMap).length} cards`;
+
+  const total2 = queue.length + againQueue.length + sessionDone;
+  document.getElementById('progress').style.width =
+    total2 > 0 ? (sessionDone / total2 * 100) + '%' : '0%';
+}
+
+// ── Card rendering ────────────────────────────────────────
+let triedJpg = false;
+
+function nextCard() {
+  // Pull from againQueue first if they've waited, else main queue
+  if (queue.length === 0 && againQueue.length === 0) {
+    showDone();
+    return;
+  }
+
+  current = queue.length > 0 ? queue.shift() : againQueue.shift();
+  showCard(current);
+}
+
+function showCard(s) {
+  document.getElementById('card').classList.remove('flipped');
+  document.getElementById('scene').style.display = 'block';
+  document.getElementById('done-screen').style.display = 'none';
+
+  // Update interval labels
+  const iv = previewIntervals(s.id);
+  document.getElementById('lbl-again').textContent = '< 1d';
+  document.getElementById('lbl-good').textContent = fmtInterval(iv.good);
+  document.getElementById('lbl-easy').textContent = fmtInterval(iv.easy);
+
+  // Image
+  triedJpg = false;
+  const src = availableMap[s.id];
   const frontImg = document.getElementById('front-img');
   frontImg.style.display = 'none';
   document.getElementById('overlay').style.display = 'none';
-  document.getElementById('tap-hint').style.display = 'none';
-  document.getElementById('speak-btn').style.display = 'none';
-  document.getElementById('loading').style.display = 'flex';
+  document.getElementById('placeholder').style.display = 'none';
 
-  // Load image
-  imgUrl = imageUrl(s);
-  frontImg.src = imgUrl;
+  if (src) {
+    frontImg.src = src;
+    document.getElementById('back-img').src = src;
+  } else {
+    document.getElementById('placeholder').style.display = 'flex';
+  }
 
-  // Back
-  document.getElementById('back-img').src = imgUrl;
   document.getElementById('back-french').textContent = s.fr;
   document.getElementById('back-english').textContent = s.en;
+  document.getElementById('speak-btn').classList.remove('speaking');
 
-  // Counter
-  document.getElementById('counter').textContent = `${index + 1} / ${SENTENCES.length}`;
-  document.getElementById('nav-num').textContent = `${index + 1} / ${SENTENCES.length}`;
-  document.getElementById('progress').style.width = ((index + 1) / SENTENCES.length * 100) + '%';
-
-  document.getElementById('btn-prev').disabled = index === 0;
-  document.getElementById('btn-next').disabled = index === SENTENCES.length - 1;
+  updateStats();
 }
 
 function imgLoaded() {
-  document.getElementById('loading').style.display = 'none';
   document.getElementById('front-img').style.display = 'block';
   document.getElementById('overlay').style.display = 'block';
-  document.getElementById('tap-hint').style.display = 'block';
-  document.getElementById('speak-btn').style.display = 'flex';
-  // Auto-play voice when image loads
-  speak();
 }
 
 function imgError() {
-  document.getElementById('loading').innerHTML = '<span style="font-size:48px">🖼️</span><span>Image unavailable</span>';
-  document.getElementById('tap-hint').style.display = 'block';
-  document.getElementById('speak-btn').style.display = 'flex';
-  speak();
+  if (!triedJpg) {
+    triedJpg = true;
+    const s = current;
+    document.getElementById('front-img').src = `images/${toSlug(s.en)}.jpg`;
+  } else {
+    document.getElementById('placeholder').style.display = 'flex';
+  }
 }
 
 function flipCard() {
-  isFlipped = !isFlipped;
-  document.getElementById('card').classList.toggle('flipped', isFlipped);
+  document.getElementById('card').classList.toggle('flipped');
+}
+
+function rate(rating) {
+  if (!current) return;
+  const next = calcNext(current.id, rating);
+  const anki = loadAnki();
+  anki[current.id] = next;
+  saveAnki(anki);
+
+  if (rating === 'again') {
+    // Re-insert after a few cards, not immediately
+    const pos = Math.min(3, queue.length);
+    queue.splice(pos, 0, current);
+  } else {
+    sessionDone++;
+  }
+
+  nextCard();
+}
+
+function showDone() {
+  document.getElementById('scene').style.display = 'none';
+  document.getElementById('done-screen').style.display = 'flex';
+  document.getElementById('done-msg').textContent =
+    `You reviewed ${sessionDone} card${sessionDone !== 1 ? 's' : ''} this session.`;
+}
+
+function restartSession() {
+  const available = Object.keys(availableMap).map(id => ({
+    sentence: SENTENCES.find(s => s.id == id),
+    src: availableMap[id]
+  }));
+  buildQueue(available);
+  document.getElementById('done-screen').style.display = 'none';
+  nextCard();
 }
 
 function speak() {
-  const s = SENTENCES[index];
+  if (!current) return;
   window.speechSynthesis.cancel();
-  const utter = new SpeechSynthesisUtterance(s.fr);
+  const utter = new SpeechSynthesisUtterance(current.fr);
   utter.lang = 'fr-FR';
   utter.rate = 0.9;
   const btn = document.getElementById('speak-btn');
@@ -504,24 +701,21 @@ function speak() {
   window.speechSynthesis.speak(utter);
 }
 
-function go(dir) {
-  window.speechSynthesis.cancel();
-  index = Math.max(0, Math.min(SENTENCES.length - 1, index + dir));
-  loadCard();
-}
+// ── Init ──────────────────────────────────────────────────
+(async () => {
+  const available = await detectAvailable();
+  document.getElementById('loading-screen').style.display = 'none';
 
-function markGotIt() {
-  if (index < SENTENCES.length - 1) go(1);
-}
+  if (available.length === 0) {
+    document.getElementById('loading-screen').style.display = 'flex';
+    document.getElementById('loading-screen').innerHTML =
+      '<span style="font-size:48px">🖼️</span><span>No images found in the images/ folder yet.</span>';
+    return;
+  }
 
-function markAgain() {
-  // Flip back to front to review again
-  isFlipped = false;
-  document.getElementById('card').classList.remove('flipped');
-  speak();
-}
-
-loadCard();
+  buildQueue(available);
+  nextCard();
+})();
 </script>
 </body>
 </html>
