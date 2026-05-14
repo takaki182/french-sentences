@@ -521,11 +521,19 @@ function calcNext(id, rating) {
   if (rating === 'again') {
     interval = 0;
     ease = Math.max(1.3, ease - 0.2);
+    return { interval, ease, due: now }; // re-queue immediately
   } else if (rating === 'good') {
-    interval = interval < 1 ? 1 : Math.round(interval * ease);
-    ease = ease;
+    if (interval < 1) {
+      // New card — due again in 10 minutes
+      return { interval: 10 / 1440, ease, due: now + 10 * 60 * 1000 };
+    }
+    interval = Math.round(interval * 1.8);
   } else { // easy
-    interval = interval < 1 ? 4 : Math.round(interval * ease * 1.3);
+    if (interval < 1) {
+      interval = 1; // 1 day
+    } else {
+      interval = Math.round(interval * 2.5);
+    }
     ease = Math.min(3.0, ease + 0.1);
   }
 
@@ -533,10 +541,13 @@ function calcNext(id, rating) {
 }
 
 function previewIntervals(id) {
+  const c = getCard(id);
+  const isNew = c.interval < 1;
   return {
     again: 0,
-    good:  calcNext(id, 'good').interval,
-    easy:  calcNext(id, 'easy').interval,
+    good:  isNew ? 0 : calcNext(id, 'good').interval,
+    easy:  isNew ? 1 : calcNext(id, 'easy').interval,
+    isNew,
   };
 }
 
@@ -634,9 +645,9 @@ function showCard(s) {
 
   // Update interval labels
   const iv = previewIntervals(s.id);
-  document.getElementById('lbl-again').textContent = '< 1d';
-  document.getElementById('lbl-good').textContent = fmtInterval(iv.good);
-  document.getElementById('lbl-easy').textContent = fmtInterval(iv.easy);
+  document.getElementById('lbl-again').textContent = 'soon';
+  document.getElementById('lbl-good').textContent = iv.isNew ? '10m' : fmtInterval(iv.good);
+  document.getElementById('lbl-easy').textContent = iv.isNew ? '1d' : fmtInterval(iv.easy);
 
   // Image
   triedJpg = false;
